@@ -134,7 +134,7 @@
        MSAL Configuration for Microsoft Login
        Replace 'YOUR_CLIENT_ID_HERE' with your actual Azure App Registration Client ID.
     ---------------------------- */
-    const msalConfig = { auth: { clientId: "YOUR_CLIENT_ID_HERE", authority: "https://login.microsoftonline.com/common", redirectUri: window.location.href } };
+    const msalConfig = { auth: { clientId: "b05f9433-09b8-41d8-a9d9-bac970fbcb7a", authority: "https://login.microsoftonline.com/common", redirectUri: window.location.href } };
     const msalInstance = new msal.PublicClientApplication(msalConfig);
     const loginRequest = { scopes: ["User.Read"] };
     const loginBtn = document.getElementById("loginBtn");
