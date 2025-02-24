@@ -1,4 +1,4 @@
-- **Software Quality Assurance**
+- **Software Quality Assurance** ```Version 1.0.0```
   - **Reviewing**
     - **Types**
       - **Buddy Check**
@@ -235,3 +235,4 @@
           - Measured and controlled
         - **Level 5: Optimizing**
           - Focuses on process improvements
+
