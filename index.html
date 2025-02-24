@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Software Quality Assurance Study Tool</title>
+  <!-- Include MSAL.js for Microsoft Authentication and Chart.js for charts -->
+  <script src="https://alcdn.msauth.net/browser/2.28.1/js/msal-browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Basic Reset */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
+    header { text-align: center; margin-bottom: 20px; }
+    h1 { margin-bottom: 10px; }
+    /* Authentication Section */
+    #authSection { text-align: right; margin-bottom: 10px; }
+    #authSection button { padding: 6px 12px; border: none; background: #007bff; color: #fff; border-radius: 4px; cursor: pointer; }
+    #authSection button:hover { background: #0056b3; }
+    /* Tabs Navigation */
+    .tabs { display: flex; list-style: none; margin-bottom: 20px; cursor: pointer; justify-content: center; }
+    .tabs li { background: #fff; padding: 10px 20px; border: 1px solid #ccc; border-bottom: none; margin-right: 5px; transition: background 0.3s; }
+    .tabs li.active, .tabs li:hover { background: #e0e0e0; }
+    /* Tab Content */
+    .tab-content { display: none; background: #fff; padding: 20px; border: 1px solid #ccc; }
+    .tab-content.active { display: block; }
+    /* Filter Navigation */
+    .filter-nav { margin-bottom: 15px; text-align: center; }
+    .filter-nav button { margin: 0 5px 5px 0; padding: 5px 10px; border: 1px solid #007bff; background: #fff; color: #007bff; border-radius: 4px; cursor: pointer; transition: background 0.3s, color 0.3s; }
+    .filter-nav button.active, .filter-nav button:hover { background: #007bff; color: #fff; }
+    /* Flashcards Styles */
+    .flashcards-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+    .flashcard { width: 250px; height: 150px; perspective: 1000px; cursor: pointer; border: none; }
+    .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
+    .flashcard.flipped .card-inner { transform: rotateY(180deg); }
+    .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border: 1px solid #ccc; border-radius: 8px; padding: 10px; display: flex; align-items: center; justify-content: center; text-align: center; background: #fff; }
+    .card-back { transform: rotateY(180deg); background: #fafafa; }
+    /* Matching Exercise */
+    .matching-container { max-width: 800px; margin: 0 auto; }
+    .matching-item { margin-bottom: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+    .matching-item label { font-weight: bold; display: block; margin-bottom: 5px; }
+    .result { margin-top: 10px; font-weight: bold; text-align: center; }
+    /* Quiz & Test Generator Styles */
+    .quiz-item, .test-item { margin-bottom: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+    .quiz-item p, .test-item p { margin-bottom: 5px; }
+    .quiz-result, .test-result { margin-top: 15px; font-size: 1.1em; font-weight: bold; text-align: center; }
+    /* Test Generator Controls */
+    #testControls { margin-bottom: 15px; text-align: center; }
+    #testControls select, #testControls button { margin: 0 5px; padding: 6px 10px; border: 1px solid #007bff; border-radius: 4px; }
+    /* Chart Container */
+    #chartContainer { width: 400px; margin: 20px auto; }
+    button { padding: 8px 15px; border: none; background: #007bff; color: #fff; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+    button:hover { background: #0056b3; }
+  </style>
+</head>
+<body>
+  <!-- Authentication Section -->
+  <div id="authSection">
+    <span id="userEmail"></span>
+    <button id="loginBtn">Login with Microsoft</button>
+    <button id="logoutBtn" style="display:none;">Logout</button>
+  </div>
+  <header>
+    <h1>Software Quality Assurance Study Tool</h1>
+    <p>Interactive exercises covering Reviewing, Testing, Debugging, Lifecycle, Methodologies, and Framework.</p>
+  </header>
+  <!-- Tabs Navigation -->
+  <nav>
+    <ul class="tabs">
+      <li data-tab="flashcards" class="active">Flashcards</li>
+      <li data-tab="matching">Term Matching</li>
+      <li data-tab="quiz">True/False Quiz</li>
+      <li data-tab="testGenerator" id="testGenTab" style="display:none;">Test Generator</li>
+    </ul>
+  </nav>
+  <!-- Tab Content -->
+  <main>
+    <!-- Flashcards Section -->
+    <section id="flashcards" class="tab-content active">
+      <div id="flashcardsFilter" class="filter-nav"></div>
+      <div class="flashcards-container" id="flashcardsContainer"><!-- Flashcards injected here --></div>
+    </section>
+    <!-- Term Matching Section -->
+    <section id="matching" class="tab-content">
+      <div id="matchingFilter" class="filter-nav"></div>
+      <div class="matching-container" id="matchingContainer"><!-- Matching items injected here --></div>
+      <button id="checkMatching">Check Answers</button>
+      <div id="matchingResult" class="result"></div>
+    </section>
+    <!-- True/False Quiz Section -->
+    <section id="quiz" class="tab-content">
+      <div id="quizFilter" class="filter-nav"></div>
+      <form id="quizForm"><!-- Quiz questions injected here --></form>
+      <button id="submitQuiz">Submit Quiz</button>
+      <div id="quizResult" class="quiz-result"></div>
+    </section>
+    <!-- Test Generator Section (Visible only when logged in) -->
+    <section id="testGenerator" class="tab-content">
+      <div id="testFilter" class="filter-nav"></div>
+      <div id="testControls">
+        <select id="testMode">
+          <option value="all">Entire Test</option>
+          <option value="section">By Section</option>
+        </select>
+        <select id="sectionSelect" style="display:none;">
+          <option value="All">All</option>
+          <option value="Reviewing">Reviewing</option>
+          <option value="Testing">Testing</option>
+          <option value="Debugging">Debugging</option>
+          <option value="Lifecycle">Lifecycle</option>
+          <option value="Methodologies">Methodologies</option>
+          <option value="Framework">Framework</option>
+        </select>
+        <button id="startTest">Start Test</button>
+      </div>
+      <div id="testArea" style="display:none;">
+        <div id="testQuestion" class="test-item"></div>
+        <div id="testAnswerOptions">
+          <label><input type="radio" name="testAnswer" value="true"> True</label>
+          <label><input type="radio" name="testAnswer" value="false"> False</label>
+        </div>
+        <button id="submitTestAnswer">Submit Answer</button>
+      </div>
+      <button id="resetTest" style="display:none;">Reset Test</button>
+      <button id="viewHistory" style="display:none;">View History</button>
+      <div id="testResult" class="test-result"></div>
+      <div id="chartContainer" style="display:none;">
+        <canvas id="resultChart"></canvas>
+      </div>
+    </section>
+  </main>
+  <script>
+    /* ----------------------------
+       MSAL Configuration for Microsoft Login
+       Replace 'YOUR_CLIENT_ID_HERE' with your actual Azure App Registration Client ID.
+    ---------------------------- */
+    const msalConfig = { auth: { clientId: "YOUR_CLIENT_ID_HERE", authority: "https://login.microsoftonline.com/common", redirectUri: window.location.href } };
+    const msalInstance = new msal.PublicClientApplication(msalConfig);
+    const loginRequest = { scopes: ["User.Read"] };
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const userEmailSpan = document.getElementById("userEmail");
+    function signIn() {
+      msalInstance.loginPopup(loginRequest).then(loginResponse => { msalInstance.setActiveAccount(loginResponse.account); updateUIAfterLogin(loginResponse.account); }).catch(error => { console.error(error); });
+    }
+    function signOut() {
+      const account = msalInstance.getActiveAccount();
+      if(account) { msalInstance.logoutPopup({ account: account }).then(() => { localStorage.removeItem("userEmail"); location.reload(); }); }
+    }
+    function updateUIAfterLogin(account) {
+      const email = account.username;
+      localStorage.setItem("userEmail", email);
+      userEmailSpan.textContent = email;
+      loginBtn.style.display = "none";
+      logoutBtn.style.display = "inline-block";
+      document.getElementById("testGenTab").style.display = "block"; // Show Test Generator tab after login
+    }
+    loginBtn.addEventListener("click", signIn);
+    logoutBtn.addEventListener("click", signOut);
+    window.addEventListener("load", () => {
+      const currentAccounts = msalInstance.getAllAccounts();
+      if(currentAccounts.length > 0) { msalInstance.setActiveAccount(currentAccounts[0]); updateUIAfterLogin(currentAccounts[0]); }
+    });
+    /* ----------------------------
+       Data Definitions (Flashcards and Quiz Questions)
+    ---------------------------- */
+    const sections = ["All", "Reviewing", "Testing", "Debugging", "Lifecycle", "Methodologies", "Framework"];
+    const flashcards = [
+      { term: "Buddy Check", definition: "An informal verification technique where two members work together to review the same project.", section: "Reviewing" },
+      { term: "Circulation", definition: "The project is circulated to each reviewer who adds their own comments; best when reviewers are separated.", section: "Reviewing" },
+      { term: "Walkthrough", definition: "An examination by a small group of peers (usually 3-4 developers) aimed at finding defects.", section: "Reviewing" },
+      { term: "Technical Review", definition: "A formal team evaluation led by a trained moderator (not the author) with documentation and a defect detection process.", section: "Reviewing" },
+      { term: "Code Inspection", definition: "A team (moderator, programmer, designer, test specialist) reviews the project with pre-meeting prep; errors are recorded and reported.", section: "Reviewing" },
+      { term: "Unit Testing", definition: "Testing individual components, subsystems, hardware, and software.", section: "Testing" },
+      { term: "Integration/Incremental Testing", definition: "Testing component interfaces and confirming requirements using Top-Down and Bottom-Up approaches.", section: "Testing" },
+      { term: "Systems Testing", definition: "Testing the entire system against requirements including facility, volume, stress, usability, security, performance, storage, configuration, compatibility, installation, reliability, recovery, serviceability, documentation, and procedure.", section: "Testing" },
+      { term: "Functional Testing", definition: "End-to-end testing for discrepancies between behavior and requirements; includes Black Box, Grey Box, and White Box testing.", section: "Testing" },
+      { term: "Acceptance Testing", definition: "Comparing the program to its initial requirements.", section: "Testing" },
+      { term: "Regression Testing", definition: "Executing tests to check that modifications do not break working code.", section: "Testing" },
+      { term: "Testing Principle 1", definition: "A test case must include a definition of the expected output or result.", section: "Testing" },
+      { term: "Testing Principle 2", definition: "A programmer should avoid testing their own program.", section: "Testing" },
+      { term: "Testing Principle 3", definition: "A programming organization should not test its own programs.", section: "Testing" },
+      { term: "Testing Principle 4", definition: "Every testing process must include a thorough inspection of its results.", section: "Testing" },
+      { term: "Testing Principle 5", definition: "Test cases must be written for both valid/expected and invalid/unexpected input conditions.", section: "Testing" },
+      { term: "Testing Principle 6", definition: "Testing must verify that the program does not perform unintended actions.", section: "Testing" },
+      { term: "Testing Principle 7", definition: "Throwaway test cases should be avoided unless the program is truly disposable.", section: "Testing" },
+      { term: "Testing Principle 8", definition: "Planning a test effort assuming no errors will be found is ill-advised.", section: "Testing" },
+      { term: "Testing Principle 9", definition: "The likelihood of additional errors is proportional to the errors already found.", section: "Testing" },
+      { term: "Testing Principle 10", definition: "Testing is an extremely creative and intellectually challenging task.", section: "Testing" },
+      { term: "Verification", definition: "Comparing the input of the System Design Phase to that of the Program Design Phase.", section: "Testing" },
+      { term: "Design Technique – Logic Coverage", definition: "Ensures every decision outcome and statement/entry point is executed at least once.", section: "Testing" },
+      { term: "Design Technique – Equivalence Partitioning", definition: "Groups similar input conditions to reduce the number of test cases.", section: "Testing" },
+      { term: "Design Technique – Boundary Value Analysis", definition: "Tests edge conditions of an equivalence class and considers output classes.", section: "Testing" },
+      { term: "Design Technique – Cause-Effect Graphing", definition: "Uses Boolean diagrams to aid in selecting complete test cases.", section: "Testing" },
+      { term: "Design Technique – Error Guessing", definition: "Relies on tester intuition and experience to predict likely errors.", section: "Testing" },
+      { term: "Brute Force Debugging", definition: "A common, mentally taxing method using breakpoints, storage dumps, or print statements.", section: "Debugging" },
+      { term: "Automated Tools", definition: "Tools that set breakpoints to suspend execution for state inspection.", section: "Debugging" },
+      { term: "Storage Dump", definition: "Captures the program’s state at a single moment by saving storage data to disk.", section: "Debugging" },
+      { term: "Scatter Print Statements", definition: "Inserting print commands in code to output debugging information.", section: "Debugging" },
+      { term: "Induction Debugging", definition: "Reasoning from specific observations to a general conclusion (following clues).", section: "Debugging" },
+      { term: "Deduction Debugging", definition: "Eliminating possibilities to locate the error.", section: "Debugging" },
+      { term: "Backtracking Debugging", definition: "Working backwards through incorrect results to pinpoint the error.", section: "Debugging" },
+      { term: "Error-Locating Principle", definition: "Effective error-locating involves thinking, taking breaks, and using tools only as a last resort.", section: "Debugging" },
+      { term: "Error-Repairing Principle", definition: "Fix the underlying error (not just the symptom) and expect one bug to indicate others.", section: "Debugging" },
+      { term: "Error Analysis Principle", definition: "Examine where, how, and why an error was made and how it might have been prevented.", section: "Debugging" },
+      { term: "Lifecycle Step 1", definition: "Identify the bug.", section: "Lifecycle" },
+      { term: "Lifecycle Step 2", definition: "Report and document the bug.", section: "Lifecycle" },
+      { term: "Lifecycle Step 3", definition: "Triage bug reports by defining each.", section: "Lifecycle" },
+      { term: "Lifecycle Step 4", definition: "Communicate the bug details.", section: "Lifecycle" },
+      { term: "Lifecycle Step 5", definition: "Fix the bug during a sprint.", section: "Lifecycle" },
+      { term: "Lifecycle Correspondence: Requirements ↔ Acceptance Test", definition: "Requirements correspond to Acceptance Testing.", section: "Lifecycle" },
+      { term: "Lifecycle Correspondence: Objectives ↔ System Test", definition: "Objectives correspond to System Testing.", section: "Lifecycle" },
+      { term: "Lifecycle Correspondence: External Specifications ↔ Function Test", definition: "External Specifications correspond to Function Testing.", section: "Lifecycle" },
+      { term: "Lifecycle Correspondence: System Design ↔ Integration Test", definition: "System Design corresponds to Integration Testing.", section: "Lifecycle" },
+      { term: "Lifecycle Correspondence: Program Structure Design ↔ Integration Test", definition: "Program Structure Design corresponds to Integration Testing.", section: "Lifecycle" },
+      { term: "Lifecycle Correspondence: Module Interface Specification ↔ Module Test", definition: "Module Interface Specification corresponds to Module Testing.", section: "Lifecycle" },
+      { term: "Lifecycle Correspondence: Code ↔ Installation Test", definition: "Code corresponds to Installation Testing.", section: "Lifecycle" },
+      { term: "SDLC", definition: "Software Development Life Cycle: Planning, Requirements, Design, Development, Testing, and Deployment.", section: "Methodologies" },
+      { term: "Waterfall Model Pros", definition: "Pros: Simple, easy to manage, phased approach, well-documented milestones.", section: "Methodologies" },
+      { term: "Waterfall Model Cons", definition: "Cons: No early working software, inflexible for changes, not for complex projects.", section: "Methodologies" },
+      { term: "Iterative Model Pros", definition: "Pros: Early working functionality, periodic results, parallel development, easier risk management.", section: "Methodologies" },
+      { term: "Iterative Model Cons", definition: "Cons: Requires more resources/management, potential design issues, unclear project end.", section: "Methodologies" },
+      { term: "Spiral Model Pros", definition: "Pros: Accommodates changing requirements, extensive prototypes, accurate requirements, early system visibility, risk management.", section: "Methodologies" },
+      { term: "Spiral Model Cons", definition: "Cons: Complex management, unclear end, not for small/low-risk projects, excessive documentation.", section: "Methodologies" },
+      { term: "V-Model Pros", definition: "Pros: Highly disciplined, sequential, works well for small projects, simple to manage.", section: "Methodologies" },
+      { term: "V-Model Cons", definition: "Cons: High risk with changes, inflexible once testing begins, not for complex projects.", section: "Methodologies" },
+      { term: "Agile Model Pros", definition: "Pros: Realistic, promotes teamwork and rapid development with minimal documentation.", section: "Methodologies" },
+      { term: "Agile Model Cons", definition: "Cons: Not ideal for complex dependencies, requires strong agile leadership and customer interaction.", section: "Methodologies" },
+      { term: "Quality Assurance", definition: "The systematic process used to determine if a product meets its specifications.", section: "Framework" },
+      { term: "CMMI", definition: "Capability Maturity Model Integration: A process improvement program with five maturity levels.", section: "Framework" },
+      { term: "CMMI Level 1", definition: "Level 1 (Initial): Unpredictable, poorly controlled, and reactive.", section: "Framework" },
+      { term: "CMMI Level 2", definition: "Level 2 (Managed): Characterized by project-level control and a reactive approach.", section: "Framework" },
+      { term: "CMMI Level 3", definition: "Level 3 (Defined): Organization-wide, proactive processes are established.", section: "Framework" },
+      { term: "CMMI Level 4", definition: "Level 4 (Quantitatively Managed): Processes are measured and controlled.", section: "Framework" },
+      { term: "CMMI Level 5", definition: "Level 5 (Optimizing): Focuses on continuous process improvement.", section: "Framework" }
+    ];
+    const quizQuestions = flashcards.map((card, i) => { 
+      // Create a corresponding true/false quiz question (some altered to be false)
+      let questionText = "True or False: " + card.term + " is defined as: " + card.definition;
+      let answer = true; 
+      // For variety, if the card term includes "Cons" or "Principle 2" or similar, flip the answer to false in half the cases.
+      if(card.term.indexOf("Cons") > -1 || Math.random() < 0.5) { answer = false; }
+      return { question: questionText, answer: answer, section: card.section };
+    });
+    /* ----------------------------
+       Tab Navigation Logic
+    ---------------------------- */
+    const tabs = document.querySelectorAll('.tabs li');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tabContents.forEach(tc => tc.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.getAttribute('data-tab')).classList.add('active');
+      });
+    });
+    /* ----------------------------
+       Filter Navigation Logic
+    ---------------------------- */
+    function createFilterNav(filterContainerId, itemContainerId) {
+      const filterContainer = document.getElementById(filterContainerId);
+      filterContainer.innerHTML = "";
+      sections.forEach(section => {
+        const btn = document.createElement("button");
+        btn.textContent = section;
+        btn.dataset.filter = section;
+        btn.classList.add("filter-btn");
+        if(section === "All") btn.classList.add("active");
+        btn.addEventListener("click", () => {
+          const buttons = filterContainer.querySelectorAll("button");
+          buttons.forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          filterItems(itemContainerId, section);
+        });
+        filterContainer.appendChild(btn);
+      });
+    }
+    function filterItems(itemContainerId, selectedSection) {
+      const container = document.getElementById(itemContainerId);
+      const items = container.children;
+      for (let item of items) {
+        item.style.display = (selectedSection === "All" || item.dataset.section === selectedSection) ? "block" : "none";
+      }
+    }
+    /* ----------------------------
+       Flashcards Creation
+    ---------------------------- */
+    function createFlashcards() {
+      const container = document.getElementById('flashcardsContainer');
+      container.innerHTML = "";
+      flashcards.forEach(card => {
+        const flashcard = document.createElement('div');
+        flashcard.classList.add('flashcard');
+        flashcard.setAttribute("data-section", card.section);
+        flashcard.innerHTML = `
+          <div class="card-inner">
+            <div class="card-face card-front"><h3>${card.term}</h3></div>
+            <div class="card-face card-back"><p>${card.definition}</p></div>
+          </div>
+        `;
+        flashcard.addEventListener('click', () => { flashcard.classList.toggle('flipped'); });
+        container.appendChild(flashcard);
+      });
+    }
+    createFlashcards();
+    createFilterNav("flashcardsFilter", "flashcardsContainer");
+    /* ----------------------------
+       Term Matching Creation
+    ---------------------------- */
+    function createMatchingExercise() {
+      const container = document.getElementById('matchingContainer');
+      container.innerHTML = "";
+      flashcards.forEach((card, index) => {
+        const item = document.createElement('div');
+        item.classList.add('matching-item');
+        item.setAttribute("data-section", card.section);
+        const label = document.createElement('label');
+        label.textContent = `${index + 1}. ${card.term}`;
+        item.appendChild(label);
+        const select = document.createElement('select');
+        select.setAttribute('data-term-index', index);
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = "";
+        defaultOpt.textContent = "Select matching definition";
+        select.appendChild(defaultOpt);
+        const options = flashcards.map((c, i) => ({ index: i, text: c.definition }));
+        options.sort(() => Math.random() - 0.5);
+        options.forEach(opt => {
+          const option = document.createElement('option');
+          option.value = opt.index;
+          option.textContent = opt.text.length > 100 ? opt.text.substring(0, 100) + "..." : opt.text;
+          select.appendChild(option);
+        });
+        item.appendChild(select);
+        container.appendChild(item);
+      });
+    }
+    createMatchingExercise();
+    createFilterNav("matchingFilter", "matchingContainer");
+    document.getElementById('checkMatching').addEventListener('click', () => {
+      const selects = document.querySelectorAll('#matchingContainer select');
+      let correct = 0;
+      selects.forEach(select => {
+        const termIndex = parseInt(select.getAttribute('data-term-index'));
+        if (select.value === termIndex.toString()) { correct++; select.style.border = "2px solid green"; }
+        else { select.style.border = "2px solid red"; }
+      });
+      document.getElementById('matchingResult').textContent = `You matched ${correct} out of ${flashcards.length} correctly.`;
+    });
+    /* ----------------------------
+       True/False Quiz Creation
+    ---------------------------- */
+    function createQuiz() {
+      const quizForm = document.getElementById('quizForm');
+      quizForm.innerHTML = "";
+      quizQuestions.forEach((q, index) => {
+        const quizItem = document.createElement('div');
+        quizItem.classList.add('quiz-item');
+        quizItem.setAttribute("data-section", q.section);
+        quizItem.innerHTML = `
+          <p>${index + 1}. ${q.question}</p>
+          <label><input type="radio" name="q${index}" value="true"> True</label>
+          <label><input type="radio" name="q${index}" value="false"> False</label>
+        `;
+        quizForm.appendChild(quizItem);
+      });
+    }
+    createQuiz();
+    createFilterNav("quizFilter", "quizForm");
+    document.getElementById('submitQuiz').addEventListener('click', () => {
+      let score = 0;
+      quizQuestions.forEach((q, index) => {
+        const answerEls = document.getElementsByName('q' + index);
+        answerEls.forEach(answerEl => {
+          if (answerEl.checked && answerEl.value === q.answer.toString()) { score++; }
+        });
+      });
+      document.getElementById('quizResult').textContent = `Your score: ${score} out of ${quizQuestions.length}`;
+    });
+    /* ----------------------------
+       Test Generator Functionality
+    ---------------------------- */
+    let testPool = []; let currentTestPool = []; let totalAttempts = 0; let totalCorrect = 0; let testHistory = JSON.parse(localStorage.getItem("testHistory")) || [];
+    function updateTestHistory() { localStorage.setItem("testHistory", JSON.stringify(testHistory)); }
+    function startTestGenerator() {
+      const mode = document.getElementById("testMode").value;
+      let filteredQuestions = [];
+      if(mode === "all") { filteredQuestions = quizQuestions.slice(); }
+      else { 
+        const section = document.getElementById("sectionSelect").value;
+        filteredQuestions = quizQuestions.filter(q => section === "All" || q.section === section);
+      }
+      if(filteredQuestions.length === 0) { alert("No questions available for selected section."); return; }
+      testPool = filteredQuestions.slice();
+      currentTestPool = filteredQuestions.slice();
+      totalAttempts = 0; totalCorrect = 0;
+      document.getElementById("testArea").style.display = "block";
+      document.getElementById("resetTest").style.display = "inline-block";
+      document.getElementById("viewHistory").style.display = "inline-block";
+      nextTestQuestion();
+    }
+    function nextTestQuestion() {
+      if(currentTestPool.length === 0) { finishTest(); return; }
+      const randomIndex = Math.floor(Math.random() * currentTestPool.length);
+      const currentQuestion = currentTestPool[randomIndex];
+      document.getElementById("testQuestion").innerHTML = `<p>${currentQuestion.question}</p>`;
+      document.getElementsByName("testAnswer").forEach(el => { el.checked = false; });
+      document.getElementById("testQuestion").dataset.currentIndex = randomIndex;
+    }
+    function submitTestAnswer() {
+      const currentIndex = parseInt(document.getElementById("testQuestion").dataset.currentIndex);
+      const currentQuestion = currentTestPool[currentIndex];
+      const selected = document.querySelector('input[name="testAnswer"]:checked');
+      if(!selected) { alert("Please select an answer."); return; }
+      totalAttempts++;
+      if(selected.value === currentQuestion.answer.toString()) {
+        totalCorrect++;
+        // Remove the question from the current pool as it's answered correctly
+        currentTestPool.splice(currentIndex, 1);
+        alert("Correct!");
+      } else {
+        alert("Incorrect. Try again.");
+      }
+      nextTestQuestion();
+    }
+    function finishTest() {
+      alert("Test complete! All questions answered correctly.");
+      const result = { timestamp: new Date().toLocaleString(), attempts: totalAttempts, correct: totalCorrect, percentage: Math.round((totalCorrect/totalAttempts)*100) };
+      testHistory.push(result);
+      updateTestHistory();
+      document.getElementById("testResult").textContent = `Test finished. Total attempts: ${totalAttempts}, Correct answers: ${totalCorrect}, Accuracy: ${result.percentage}%`;
+      showChart();
+    }
+    function resetTest() { currentTestPool = testPool.slice(); totalAttempts = 0; totalCorrect = 0; document.getElementById("testResult").textContent = ""; document.getElementById("chartContainer").style.display = "none"; nextTestQuestion(); }
+    function showHistory() {
+      let historyText = "Test History:\n";
+      testHistory.forEach(entry => { historyText += `${entry.timestamp} - Attempts: ${entry.attempts}, Correct: ${entry.correct}, Accuracy: ${entry.percentage}%\n`; });
+      alert(historyText);
+      showChart();
+    }
+    function showChart() {
+      document.getElementById("chartContainer").style.display = "block";
+      const ctx = document.getElementById("resultChart").getContext("2d");
+      const latest = testHistory[testHistory.length-1];
+      const data = { labels: ["Correct", "Incorrect"], datasets: [{ data: [latest.correct, latest.attempts - latest.correct], backgroundColor: ["#28a745", "#dc3545"] }] };
+      new Chart(ctx, { type: "pie", data: data });
+    }
+    document.getElementById("startTest").addEventListener("click", startTestGenerator);
+    document.getElementById("submitTestAnswer").addEventListener("click", submitTestAnswer);
+    document.getElementById("resetTest").addEventListener("click", resetTest);
+    document.getElementById("viewHistory").addEventListener("click", showHistory);
+    document.getElementById("testMode").addEventListener("change", () => {
+      const mode = document.getElementById("testMode").value;
+      document.getElementById("sectionSelect").style.display = mode === "section" ? "inline-block" : "none";
+    });
+    createFilterNav("testFilter", "quizForm"); // Reusing filter nav creation for test generator if needed.
+  </script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+- **Software Quality Assurance**
+  - **Reviewing**
+    - **Types**
+      - **Buddy Check**
+        - An informal verification technique
+          - Two members work together to review the same project
+      - **Circulation**
+        - The project is circulated to each reviewer who adds their own comments
+          - Easiest type of review to be completed when the reviewers are separated
+      - **Walkthrough**
+        - The project is examined by a group of peers for the purpose of finding defects
+          - Usually a group of 3-4 developers
+          - Majority of the program testing is conducted by people other than the author
+      - **Technical**
+        - Formal team evaluation of a life cycle project
+          - Led by the trained moderator, who is not the author
+          - Documented and uses a defect detection process
+          - A report is prepared with the list of issues that need to be addressed
+      - **Code Inspection**
+        - A team logically steps through a project to find errors
+          - Team usually made of four people: moderator, programmer, designer, test specialist
+          - Moderator duties include:
+            - Distributing materials and scheduling the session
+            - Leading the session
+            - Recording all errors found
+            - Ensuring the errors are corrected later
+          - Essential to have pre-meeting preparation
+          - Errors are detected, but not fixed. Post-inspection is used to ensure timely and prompt corrective action
+          - Inspection report is prepared and shared with author
+  - **Testing**
+    - **Unit**
+      - Process of testing the individual components, subsystems, hardware, and software
+    - **Integration/Incremental**
+      - Tests component interfaces and confirms requirements
+        - Top-Down
+        - Bottom-up
+    - **Systems**
+      - The entire system can be tested against the requirement specifications
+        - **Facility** - Ensures that the functionality in the objectives is implemented
+        - **Volume** - Subjects the program to abnormally large volumes of data to process
+        - **Stress** - Subjects the program to abnormally large loads, generally concurrent processing
+        - **Usability** - Determines how well the end user can complete specified requirements
+        - **Security** - Tries to subvert the program's security measures
+        - **Performance** - Determines whether the program meets response/throughput requirements
+        - **Storage** - Ensures the program can correctly manage its storage needs
+        - **Configuration** - Checks the program performs adequately on recommended configurations
+        - **Compatibility/Conversion** - Checks if new versions are compatible with old versions
+        - **Installation** - Ensures the installation methods work on all supported platforms
+        - **Reliability** - Determines whether the program meets reliability specifications
+        - **Recovery** - Tests whether the system's recovery facilities work as designed
+        - **Serviceability/Maintenance** - Determines whether the application correctly yields data on events requiring technical support
+        - **Documentation** - Validates the accuracy of all user documentation
+        - **Procedure** - Determines the accuracy of special procedures required to maintain program
+    - **Functional**
+      - Process of attempting to find discrepancies between behavior and requirements; testing the end-to-end functionality of the system as a whole
+        - **Black Box**
+          - Tests behavior
+          - Code is not known
+          - Involves testing from user perspective
+        - **Grey Box**
+          - Mix of black box and white box approach
+        - **White Box**
+          - Internal working is known to tester
+          - Involves testing structure validation
+          - Main focus on security flaws
+    - **Acceptance**
+      - The process of comparing the program to its initial requirements
+    - **Regression**
+      - Execution of tests to check that modifications do not break working code
+    - **Principles**
+      1. A necessary part of a test case is a definition of the expected output or result
+      2. A programmer should avoid attempting to test his or her own program
+      3. A programming organization should not test its own programs
+      4. Any testing process should include a thorough inspection of the results of each test
+      5. Test cases must be written for input conditions that are invalid and unexpected, as well as for those that are valid and expected
+      6. Examining a program to see if it does not do what it is supposed to do is only half the battle; the other half is seeing whether the program does things it is not supposed to do
+      7. Avoid throwaway test cases unless the program is truly a throwaway program
+      8. Do not plan a testing effort under the tacit assumption that no errors will be found
+      9. The probability of the existence of more errors in a section of a program is proportional to the number of errors already found in that section
+      10. Testing is an extremely creative and intellectually challenging task
+    - **Verification**
+      - Compare input of System Design Phase to Program Design Phase
+    - **Design Techniques**
+      - **Logic Coverage** - Tests that exercise all decision point outcomes at least once, and ensure that all statements or entry points are executed at least once
+      - **Equivalence Partitioning** - Defines condition or error classes to help reduce the number of finite tests. Assumes that a test of a representative value within a class also tests all values or conditions within that class
+      - **Boundary Value Analysis** - Tests each edge condition of an equivalence class; also considers output equivalence classes as well as input classes
+      - **Cause-Effect Graphing** - Produces Boolean graphical representations of potential test case results to aid in selecting efficient and complete test cases
+      - **Error Guessing** - Produces test cases based on intuitive and expert knowledge of test team members to define potential software errors to facilitate efficient test case design
+  - **Debugging**
+    - **Types**
+      - **Brute Force**
+        - Most common debugging scheme and is the most mentally taxing
+          - **Automated Tools** - Sets breakpoints that cause suspension in the program so the user can examine the current application state
+          - **Storage Dump** - Shows the program state at only one instance in time (storage state saved to disk)
+          - **Scatter Print Statements** - Requires user to make changes to the program code to add debug statements which can be read from the console/debug log of the application
+      - **Induction**
+        - Moving from the particulars of a situation to the whole (follow the clues)
+      - **Deduction**
+        - Uses the process of elimination and refinement to arrive at a conclusion
+      - **Backtracking**
+        - Work through the incorrect results, moving backwards until you find the source of the logic error
+    - **Principles**
+      - **Error-Locating**
+        - Think
+        - If you reach an impasse, sleep on it
+        - If you reach an impasse, describe the problem to someone else
+        - Use debugging tools only as a second resort
+        - Avoid experimentation - use only as a last resort
+      - **Error-Repairing**
+        - Where there is one bug, there is likely another
+        - Fix the error, not the symptom
+        - The probability of the fix being correct is not 100%
+        - The probability of the fix being correct drops as the size of the program increases
+        - Change the source code, not the object code
+      - **Error Analysis**
+        - Where was the error made?
+        - Who made the error?
+        - What was done incorrectly?
+        - How could the error have been prevented?
+        - Why wasn’t the error detected earlier?
+        - How could the error have been detected earlier?
+    - **Lifecycle**
+      1. Identify the bug
+      2. Report and document the bug
+      3. Triage all reports by defining each
+      4. Communicate details
+      5. Fix the bug during a sprint
+  - **Lifecycle Correspondence**
+    - Requirements ↔ Acceptance Test
+    - Objectives ↔ System Test
+    - External Specifications ↔ Function Test
+    - System Design ↔ Integration Test
+    - Program Structure Design ↔ Integration Test
+    - Module Interface Specification ↔ Module Test
+    - Code ↔ Installation Test
+  - **Methodologies**
+    - **Software Development Life Cycle (SDLC)**
+      1. Planning and Requirements Analysis
+      2. Defining Requirements
+      3. Designing the Project Architecture
+      4. Building or Developing the Product
+      5. Testing the Product
+      6. Deployment into the Market
+    - **Waterfall Model**
+      - **Pros**
+        - Simple to use
+        - Easy to manage due to rigidity of the model
+        - Phases are processed and completed one at a time
+        - Works well for small projects
+        - Clearly defined stages
+        - Understood milestones
+        - Easy to arrange tasks
+        - Process and results are well documented
+      - **Cons**
+        - No working software is produced until late
+        - Not a good model for complex and object-oriented projects
+        - Poor model for long and ongoing projects
+        - Not suitable for projects when requirements are subject to change
+        - Difficult to measure progress within stages
+    - **Iterative Model**
+      - **Pros**
+        - Working functionality can be developed early in life cycle
+        - Results are obtained early and periodically
+        - Parallel development can be planned
+        - Progress can be measured
+        - Less costly to change the scope/requirements
+        - Testing and debugging during smaller iterations is easy
+        - Easier to manage risk
+        - Risk analysis is better
+        - Supports changing requirements
+        - With each increment, operational product is delivered
+      - **Cons**
+        - More resources are required
+        - More management attention is required
+        - Design issues may arise because not all requirements are gathered in the beginning
+        - Not suitable for smaller projects
+        - End of project may not be known
+        - Highly skilled resources are required for risk analysis
+        - Project progress is highly dependent upon the risk analysis
+    - **Spiral Model**
+      - **Pros**
+        - Changing requirements can be accommodated
+        - Allows extensive use of prototypes
+        - Requirements can be captured accurately
+        - Users see the system early
+        - Development can be divided into smaller parts, allowing for better risk management
+      - **Cons**
+        - Management is more complex
+        - End of project may not be known early
+        - Not suitable for small or low-risk projects
+        - Spiral may go on indefinitely
+        - Process is complex
+        - Large number of intermediate stages requires excessive documentation
+    - **V-Model**
+      - **Pros**
+        - Highly disciplined model and phases are completed one at a time
+        - Works well for smaller projects
+        - Simple and easy to use
+        - Easy to manage due to rigidity of the model
+      - **Cons**
+        - High risk and uncertainty
+        - Not good for complex and object-oriented projects
+        - Poor model for long and ongoing projects
+        - Not suitable for projects when requirements are subject to change
+        - Difficult to change functionality once application is in testing phase
+    - **Agile Model**
+      - **Pros**
+        - Realistic approach to software development
+        - Promotes teamwork and cross-training
+        - Functionality can be developed rapidly and demonstrated
+        - Resource requirements are minimal
+        - Suitable for fixed or changing requirements
+        - Minimal rules, documentation easily employed
+        - Easy to manage
+        - Little or no planning required
+        - Gives flexibility to developers
+      - **Cons**
+        - Not suitable for handling complex dependencies
+        - An agile leader is a must
+        - Depends heavily on customer interaction
+        - Minimal documentation generated
+        - Transfer of technology to new team members may be challenging
+  - **Framework**
+    - **Quality Assurance**
+      - The systematic process used to determine whether a product meets specifications
+    - **Capability Maturity Model Integration (CMMI)**
+      - A process level improvement training and appraisal program. It can be used as a guide to improve process involvement through identifying five maturity levels
+        - **Level 1: Initial**
+          - Unpredictable, poorly controlled, and reactive
+        - **Level 2: Managed**
+          - Characterized for projects and is often reactive
+        - **Level 3: Defined**
+          - Characterized for the organization and is proactive
+        - **Level 4: Quantitatively Managed**
+          - Measured and controlled
+        - **Level 5: Optimizing**
+          - Focuses on process improvements
